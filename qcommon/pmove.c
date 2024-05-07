@@ -804,7 +804,7 @@ void PM_CheckJump(void)
 
 	VectorNormalize(flatforward);
 
-	VectorMA(pml.origin, 1, flatforward, spot);
+	VectorMA(pml.origin, 8, flatforward, spot);
 	trace = pm->trace(pml.origin, pm->mins, pm->maxs, spot);
 	if ((trace.fraction < 1) && (trace.contents & CONTENTS_SOLID))
 	{
@@ -865,9 +865,18 @@ void PM_CheckJump(void)
 	pm->s.pm_flags |= PMF_JUMP_HELD;
 
 	pm->groundentity = NULL;
-	pml.velocity[2] += 300;
-	if (pml.velocity[2] < 300)
-		pml.velocity[2] = 300;
+
+	if (ledge == 1) {
+		_VectorSubtract(spot, pml.origin, pml.velocity);
+		pml.velocity[0] *= 4;
+		pml.velocity[1] *= 4;
+		pml.velocity[2] += 200;
+	}
+	else {
+		pml.velocity[2] += 300;
+		if (pml.velocity[2] < 300)
+			pml.velocity[2] = 300;
+	}
 	wall = 0;
 	ledge = 0;
 }
