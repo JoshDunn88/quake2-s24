@@ -548,6 +548,8 @@ void weapon_grenade_fire (edict_t *ent, qboolean held)
 	vec3_t	offset;
 	vec3_t	forward, right;
 	vec3_t	start;
+	//josh
+	vec3_t oopsiedaisie;
 	int		damage = 125;
 	float	timer;
 	int		speed;
@@ -563,7 +565,9 @@ void weapon_grenade_fire (edict_t *ent, qboolean held)
 
 	timer = ent->client->grenade_time - level.time;
 	speed = GRENADE_MINSPEED + (GRENADE_TIMER - timer) * ((GRENADE_MAXSPEED - GRENADE_MINSPEED) / GRENADE_TIMER);
-	fire_grenade2 (ent, start, forward, damage, speed, timer, radius, held);
+	//josh
+	VectorSet(oopsiedaisie, -forward[0], -forward[1], -forward[2]);
+	fire_grenade2 (ent, start, oopsiedaisie, damage, speed, timer, radius, held);
 
 	if (! ( (int)dmflags->value & DF_INFINITE_AMMO ) )
 		ent->client->pers.inventory[ent->client->ammo_index]--;

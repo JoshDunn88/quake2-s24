@@ -319,7 +319,7 @@ void Cmd_God_f (edict_t *ent)
 	if (!(ent->flags & FL_GODMODE) )
 		msg = "godmode OFF\n";
 	else
-		msg = "godmode ON\n";
+		msg = "balls godmode ON\n";
 
 	gi.cprintf (ent, PRINT_HIGH, msg);
 }

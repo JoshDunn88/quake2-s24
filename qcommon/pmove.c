@@ -777,6 +777,24 @@ PM_CheckJump
 */
 void PM_CheckJump (void)
 {
+	vec3_t	spot;
+	int		cont;
+	vec3_t	flatforward;
+	trace_t	trace;
+	int wall;
+	wall = 0;
+
+	flatforward[0] = pml.forward[0];
+	flatforward[1] = pml.forward[1];
+	flatforward[2] = 0;
+	VectorNormalize(flatforward);
+
+	VectorMA(pml.origin, 1, flatforward, spot);
+	trace = pm->trace(pml.origin, pm->mins, pm->maxs, spot);
+	if ((trace.fraction < 1) && (trace.contents & CONTENTS_SOLID))
+		wall = 1;
+
+
 	if (pm->s.pm_flags & PMF_TIME_LAND)
 	{	// hasn't been long enough since landing to jump again
 		return;
@@ -811,15 +829,16 @@ void PM_CheckJump (void)
 		return;
 	}
 
-	if (pm->groundentity == NULL)
+	if (pm->groundentity == NULL && wall==0)
 		return;		// in air, so no effect
 
 	pm->s.pm_flags |= PMF_JUMP_HELD;
 
 	pm->groundentity = NULL;
-	pml.velocity[2] += 270;
-	if (pml.velocity[2] < 270)
-		pml.velocity[2] = 270;
+	pml.velocity[2] += 300;
+	if (pml.velocity[2] < 300)
+		pml.velocity[2] = 300;
+	wall = 0;
 }
 
 
