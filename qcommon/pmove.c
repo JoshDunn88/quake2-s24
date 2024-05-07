@@ -60,6 +60,10 @@ float	pm_friction = 6;
 float	pm_waterfriction = 1;
 float	pm_waterspeed = 400;
 
+//parkour vars
+int lefttac = 0;
+int righttac = 0;
+
 /*
 
   walking up a step should kill some velocity
@@ -778,12 +782,17 @@ PM_CheckJump
 void PM_CheckJump(void)
 {
 	vec3_t	spot;
+	vec3_t	spot2;
 	vec3_t ledgetracestart;
 	vec3_t ledgemins;
 	vec3_t ledgemaxs;
 	int		cont;
 	vec3_t	flatforward;
+	vec3_t	flatleft;
+	vec3_t	flatright;
+	//vec3_t	flatback;
 	trace_t	trace;
+	trace_t	trace2;
 	int wall;
 	int ledge;
 	int ledgedetectionheight = 50;
@@ -792,38 +801,57 @@ void PM_CheckJump(void)
 
 	for (int i = 0; i < 3; i++) {
 		flatforward[i] = pml.forward[i];
+		flatright[i] = pml.right[i];
+		flatleft[i] = -pml.right[i];
 		ledgetracestart[i] = pml.origin[i];
 		ledgemins[i] = pm->mins[i];
 		ledgemaxs[i] = pm->maxs[i];
 	}
 
 	flatforward[2] = 0;
+	flatleft[2] = 0;
+	flatright[2] = 0;
 	ledgetracestart[2] += ledgedetectionheight;
 
 
 
 	VectorNormalize(flatforward);
 
-	VectorMA(pml.origin, 8, flatforward, spot);
+	VectorMA(pml.origin, 12, flatforward, spot);
 	trace = pm->trace(pml.origin, pm->mins, pm->maxs, spot);
 	if ((trace.fraction < 1) && (trace.contents & CONTENTS_SOLID))
 	{
-		wall = 1;
-		Com_Printf("Wall found \n");
 
-		VectorMA(ledgetracestart, 5, flatforward, spot);
+		VectorMA(ledgetracestart, 14, flatforward, spot);
 		spot[2] += ledgedetectionheight;
 		trace = pm->trace(ledgetracestart, ledgemins, ledgemaxs, spot);
 		if ((trace.fraction == 1.0))
 		{
 			ledge = 1;
-			Com_Printf("Ledge found \n");
 		}
 	}
 
-	
-	
+	VectorMA(pml.origin, 5, flatright, spot2);
+	trace = pm->trace(pml.origin, pm->mins, pm->maxs, spot2);
+	VectorMA(pml.origin, 5, flatleft, spot2);
+	trace2 = pm->trace(pml.origin, pm->mins, pm->maxs, spot2);
+	if ((trace.fraction < 1) && (trace.contents & CONTENTS_SOLID))
+	{
+		wall = 1;
+		
+	}
+	if ((trace2.fraction < trace.fraction) && (trace2.contents & CONTENTS_SOLID)) {
+		wall = -1;
+	}
 
+
+	//print object to be interacted with
+	if (ledge == 1)
+		Com_Printf("Ledge found \n");
+	else if (wall == 1)
+		Com_Printf("Right Wall \n");
+	else if (wall == -1)
+		Com_Printf("Left wall \n");
 
 	if (pm->s.pm_flags & PMF_TIME_LAND)
 	{	// hasn't been long enough since landing to jump again
@@ -836,6 +864,12 @@ void PM_CheckJump(void)
 		return;
 	}
 
+	if (pm->groundentity == NULL && ledge == 1) {
+		_VectorSubtract(spot, pml.origin, pml.velocity);
+		pml.velocity[0] *= 4;
+		pml.velocity[1] *= 4;
+		pml.velocity[2] = 240;
+	}
 	// must wait for jump to be released
 	if (pm->s.pm_flags & PMF_JUMP_HELD)
 		return;
@@ -859,24 +893,37 @@ void PM_CheckJump(void)
 		return;
 	}
 
-	if (pm->groundentity == NULL && (wall==0 || ledge ==0))
-		return;		// in air, so no effect
-
 	pm->s.pm_flags |= PMF_JUMP_HELD;
 
-	pm->groundentity = NULL;
-
-	if (ledge == 1) {
-		_VectorSubtract(spot, pml.origin, pml.velocity);
-		pml.velocity[0] *= 4;
-		pml.velocity[1] *= 4;
-		pml.velocity[2] += 200;
+	//reset tic tacs on landing
+	if (pm->groundentity != NULL) {
+		lefttac = 0;
+		righttac = 0;
 	}
+
+	// in air
+	if (pm->groundentity == NULL && ledge==0) {
+		
+		if (wall==-1 && lefttac<3) {
+			VectorMA(pml.velocity, 60, flatforward, pml.velocity);
+			VectorMA(pml.velocity, 70, flatright, pml.velocity);
+			pml.velocity[2] += 250;
+			lefttac+= 1;
+		}
+		else if (wall == 1 && righttac <3) {
+			VectorMA(pml.velocity, 60, flatforward, pml.velocity);
+			VectorMA(pml.velocity, 70, flatleft, pml.velocity);
+			pml.velocity[2] += 250;
+			righttac+= 1;
+		}
+	}
+	
 	else {
 		pml.velocity[2] += 300;
 		if (pml.velocity[2] < 300)
 			pml.velocity[2] = 300;
 	}
+	pm->groundentity = NULL;
 	wall = 0;
 	ledge = 0;
 }
