@@ -775,24 +775,54 @@ void PM_CatagorizePosition (void)
 PM_CheckJump
 =============
 */
-void PM_CheckJump (void)
+void PM_CheckJump(void)
 {
 	vec3_t	spot;
+	vec3_t ledgetracestart;
+	vec3_t ledgemins;
+	vec3_t ledgemaxs;
 	int		cont;
 	vec3_t	flatforward;
 	trace_t	trace;
 	int wall;
+	int ledge;
+	int ledgedetectionheight = 50;
 	wall = 0;
+	ledge = 0;
 
-	flatforward[0] = pml.forward[0];
-	flatforward[1] = pml.forward[1];
+	for (int i = 0; i < 3; i++) {
+		flatforward[i] = pml.forward[i];
+		ledgetracestart[i] = pml.origin[i];
+		ledgemins[i] = pm->mins[i];
+		ledgemaxs[i] = pm->maxs[i];
+	}
+
 	flatforward[2] = 0;
+	ledgetracestart[2] += ledgedetectionheight;
+
+
+
 	VectorNormalize(flatforward);
 
 	VectorMA(pml.origin, 1, flatforward, spot);
 	trace = pm->trace(pml.origin, pm->mins, pm->maxs, spot);
 	if ((trace.fraction < 1) && (trace.contents & CONTENTS_SOLID))
+	{
 		wall = 1;
+		Com_Printf("Wall found \n");
+
+		VectorMA(ledgetracestart, 5, flatforward, spot);
+		spot[2] += ledgedetectionheight;
+		trace = pm->trace(ledgetracestart, ledgemins, ledgemaxs, spot);
+		if ((trace.fraction == 1.0))
+		{
+			ledge = 1;
+			Com_Printf("Ledge found \n");
+		}
+	}
+
+	
+	
 
 
 	if (pm->s.pm_flags & PMF_TIME_LAND)
@@ -829,7 +859,7 @@ void PM_CheckJump (void)
 		return;
 	}
 
-	if (pm->groundentity == NULL && wall==0)
+	if (pm->groundentity == NULL && (wall==0 || ledge ==0))
 		return;		// in air, so no effect
 
 	pm->s.pm_flags |= PMF_JUMP_HELD;
@@ -839,6 +869,7 @@ void PM_CheckJump (void)
 	if (pml.velocity[2] < 300)
 		pml.velocity[2] = 300;
 	wall = 0;
+	ledge = 0;
 }
 
 
