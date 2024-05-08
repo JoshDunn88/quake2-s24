@@ -1199,7 +1199,7 @@ void PM_CheckDuck (void)
 	{
 		pm->s.pm_flags |= PMF_DUCKED;
 	}
-	else if (pm->cmd.upmove < 0 && (pm->s.pm_flags & PMF_ON_GROUND) )
+	else if (pm->cmd.upmove < 0 )
 	{	// duck
 		pm->s.pm_flags |= PMF_DUCKED;
 	}
