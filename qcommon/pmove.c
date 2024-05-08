@@ -75,6 +75,8 @@ qboolean grounded = false;
 vec3_t slidedir;
 qboolean sliding = false;
 qboolean stoodup = true;
+
+//delay to make sure slide state is exited properly
 int slidereset = 20;
 
 
@@ -1224,7 +1226,7 @@ void PM_CheckDuck (void)
 				sliding = true;
 				VectorScale(pml.velocity, 1.7, slidedir);
 				_VectorCopy(slidedir, pml.velocity);
-				Com_Printf("slidin at %f \n", xyspeed);
+				//Com_Printf("slidin at %f \n", xyspeed);
 				slidereset = 0;
 			
 			}
@@ -1244,8 +1246,7 @@ void PM_CheckDuck (void)
 			sliding = false;
 			pm->s.pm_flags |= PMF_DUCKED;
 			slidereset++;
-		}
-			
+		}		
 	}
 	else
 	{	// stand up if possible
@@ -1265,14 +1266,12 @@ void PM_CheckDuck (void)
 	}
 
 	if ((pm->s.pm_flags & PMF_DUCKED) || sliding || slidereset == 0)
-	{
-		
+	{	
 		pm->maxs[2] = 4;
 		pm->viewheight = -2;
 	}
 	else
-	{
-		
+	{	
 		pm->maxs[2] = 32;
 		pm->viewheight = 22;
 		slidereset++;
