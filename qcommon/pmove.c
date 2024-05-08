@@ -1216,19 +1216,26 @@ void PM_CheckDuck (void)
 		if (xyspeed > 200 && pm->s.pm_flags & PMF_ON_GROUND) {
 			//startslide
 			if (!sliding) {
+				pm->s.pm_flags &= ~PMF_DUCKED;
 				sliding = true;
-				VectorMA(pml.velocity, 0.2, pml.velocity, slidedir);
+				VectorScale(pml.velocity, 1.7, slidedir);
 				_VectorCopy(slidedir, pml.velocity);
 				Com_Printf("slidin at %f \n", xyspeed);
+			
 			}
 			else {
+				pm->s.pm_flags &= ~PMF_DUCKED;
+				VectorScale(slidedir, 0.995, slidedir);
 				_VectorCopy(slidedir, pml.velocity);
+				Com_Printf("slidin at %f \n", xyspeed);
+
 			}
 
 			
 		}
 		// duck
 		else {
+			sliding = false;
 			pm->s.pm_flags |= PMF_DUCKED;
 		}
 			
@@ -1248,7 +1255,7 @@ void PM_CheckDuck (void)
 		sliding = false;
 	}
 
-	if (pm->s.pm_flags & PMF_DUCKED)
+	if ((pm->s.pm_flags & PMF_DUCKED) || sliding)
 	{
 		pm->maxs[2] = 4;
 		pm->viewheight = -2;
