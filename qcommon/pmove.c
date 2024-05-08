@@ -67,6 +67,8 @@ int righttac = 0;
 int leftwallrun = 0;
 int rightwallrun = 0;
 int cacheWallJump = 0;
+float lastgroundheight = 0.0;
+int startedfirstwallrun = 0;
 
 /*
 
@@ -823,6 +825,7 @@ void PM_CheckJump(void)
 	flatforward[2] = 0;
 	flatleft[2] = 0;
 	flatright[2] = 0;
+	ledgemaxs[2] = 10;
 	ledgetracestart[2] += ledgedetectionheight;
 
 
@@ -843,9 +846,9 @@ void PM_CheckJump(void)
 		}
 	}
 
-	VectorMA(pml.origin, 20, flatright, spot2);
+	VectorMA(pml.origin, 24, flatright, spot2);
 	traceR = pm->trace(pml.origin, ledgemins, ledgemaxs, spot2);
-	VectorMA(pml.origin, 20, flatleft, spot2);
+	VectorMA(pml.origin, 24, flatleft, spot2);
 	traceL = pm->trace(pml.origin, ledgemins, ledgemaxs, spot2);
 	if ((traceR.fraction < 1) && (traceR.contents & CONTENTS_SOLID))
 	{
@@ -909,8 +912,9 @@ void PM_CheckJump(void)
 			pml.velocity[2] = 240;
 		}
 
-		else if (wall == -1 && leftwallrun< wallrunlimit) {
+		else if (wall == -1 && leftwallrun< wallrunlimit && (pml.origin[2] - lastgroundheight>20 || startedfirstwallrun == 1)) {
 
+			startedfirstwallrun = 1;
 			_VectorSubtract(traceL.endpos, pml.origin, sticktowall);
 			//VectorMA(pml.velocity, 1, sticktowall, pml.velocity);
 			cacheWallJump = -1;
@@ -918,8 +922,9 @@ void PM_CheckJump(void)
 			leftwallrun++;
 		}
 
-		else if (wall == 1 && rightwallrun < wallrunlimit) {
+		else if (wall == 1 && rightwallrun < wallrunlimit && (pml.origin[2] - lastgroundheight > 20 || startedfirstwallrun == 1)) {
 
+			startedfirstwallrun = 1;
 			_VectorSubtract(traceR.endpos, pml.origin, sticktowall);
 			//VectorMA(pml.velocity, 1, sticktowall, pml.velocity);
 			cacheWallJump = 1;
@@ -963,6 +968,8 @@ void PM_CheckJump(void)
 		cacheWallJump = 0;
 		leftwallrun = 0;
 		rightwallrun = 0;
+		lastgroundheight = pml.origin[2];
+		startedfirstwallrun = 0;
 	}
 
 	// in air
