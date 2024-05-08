@@ -792,6 +792,8 @@ void PM_CheckJump(void)
 	vec3_t ledgetracestart;
 	vec3_t ledgemins;
 	vec3_t ledgemaxs;
+	vec3_t climbmins;
+	vec3_t climbmaxs;
 	int		cont;
 	vec3_t	flatforward;
 	vec3_t	flatleft;
@@ -819,6 +821,9 @@ void PM_CheckJump(void)
 		ledgetracestart[i] = pml.origin[i];
 		ledgemins[i] = 0;
 		ledgemaxs[i] = 1;
+		climbmins[i] = pm->mins[i];
+		climbmaxs[i] = pm->maxs[i];
+		//Com_Printf("min: %f, max %f \n", climbmins[2], climbmaxs[2]);
 		
 	}
 
@@ -826,6 +831,9 @@ void PM_CheckJump(void)
 	flatleft[2] = 0;
 	flatright[2] = 0;
 	ledgemaxs[2] = 10;
+	climbmins[2] /= 4;
+	climbmaxs[2] /= 4;
+	Com_Printf("min: %f, max %f \n", climbmins[2], climbmaxs[2]);
 	ledgetracestart[2] += ledgedetectionheight;
 
 
@@ -839,16 +847,16 @@ void PM_CheckJump(void)
 
 		VectorMA(ledgetracestart, 14, flatforward, spot);
 		spot[2] += ledgedetectionheight;
-		trace = pm->trace(ledgetracestart, pm->mins, pm->maxs, spot);
+		trace = pm->trace(ledgetracestart, climbmins, climbmaxs, spot);
 		if ((trace.fraction == 1.0))
 		{
 			ledge = 1;
 		}
 	}
 
-	VectorMA(pml.origin, 24, flatright, spot2);
+	VectorMA(pml.origin, 28, flatright, spot2);
 	traceR = pm->trace(pml.origin, ledgemins, ledgemaxs, spot2);
-	VectorMA(pml.origin, 24, flatleft, spot2);
+	VectorMA(pml.origin, 28, flatleft, spot2);
 	traceL = pm->trace(pml.origin, ledgemins, ledgemaxs, spot2);
 	if ((traceR.fraction < 1) && (traceR.contents & CONTENTS_SOLID))
 	{
