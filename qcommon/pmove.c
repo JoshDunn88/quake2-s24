@@ -60,9 +60,12 @@ float	pm_friction = 6;
 float	pm_waterfriction = 1;
 float	pm_waterspeed = 400;
 
+
 //parkour vars
 int lefttac = 0;
 int righttac = 0;
+int leftwallrun = 0;
+int rightwallrun = 0;
 int cacheWallJump = 0;
 
 /*
@@ -800,6 +803,8 @@ void PM_CheckJump(void)
 	int ledge;
 	
 	int ledgedetectionheight = 50;
+	int wallrunlimit = 340;
+
 	wall = 0;
 	ledge = 0;
 
@@ -846,8 +851,14 @@ void PM_CheckJump(void)
 	if ((traceL.fraction < traceR.fraction) && (traceL.contents & CONTENTS_SOLID)) {
 		wall = -1;
 	}
+
+	//peeled off wall
 	if ((traceR.fraction == 1.0) && traceL.fraction == 1.0) {
 		cacheWallJump = 0;
+		if (leftwallrun > 40)
+			leftwallrun += wallrunlimit;
+		if (rightwallrun > 40)
+			rightwallrun += wallrunlimit;
 	}
 
 
@@ -864,8 +875,9 @@ void PM_CheckJump(void)
 		return;
 	}
 
+	// not holding jump
 	if (pm->cmd.upmove < 10)
-	{	// not holding jump
+	{	
 		pm->s.pm_flags &= ~PMF_JUMP_HELD;
 		if (cacheWallJump == -1 && lefttac < 3) {
 			VectorMA(pml.velocity, 60, flatforward, pml.velocity);
@@ -893,20 +905,22 @@ void PM_CheckJump(void)
 			pml.velocity[2] = 240;
 		}
 
-		else if (wall == -1) {
+		else if (wall == -1 && leftwallrun< wallrunlimit) {
+
 			_VectorSubtract(traceL.endpos, pml.origin, sticktowall);
 			VectorMA(pml.velocity, 10, sticktowall, pml.velocity);
 			cacheWallJump = -1;
 			pml.velocity[2] = 0;
-
-			//need to pull towards wall
+			leftwallrun++;
 		}
-		else if (wall == 1) {
+
+		else if (wall == 1 && rightwallrun < wallrunlimit) {
+
 			_VectorSubtract(traceR.endpos, pml.origin, sticktowall);
 			VectorMA(pml.velocity, 10, sticktowall, pml.velocity);
 			cacheWallJump = 1;
 			pml.velocity[2] = 0;
-			//need to pull towards wall
+			rightwallrun++;
 		}
 
 	}
@@ -943,6 +957,8 @@ void PM_CheckJump(void)
 		lefttac = 0;
 		righttac = 0;
 		cacheWallJump = 0;
+		leftwallrun = 0;
+		rightwallrun = 0;
 	}
 
 	// in air
@@ -970,6 +986,7 @@ void PM_CheckJump(void)
 	pm->groundentity = NULL;
 	wall = 0;
 	ledge = 0;
+
 }
 
 
