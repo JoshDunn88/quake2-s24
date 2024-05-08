@@ -70,6 +70,9 @@ int cacheWallJump = 0;
 int startedfirstwallrun = 0;
 float lastgroundheight = 0.0;
 vec3_t exitvec;
+qboolean grounded = false;
+vec3_t slidedir;
+qboolean sliding = false;
 
 //parkour params
 int tacmax = 2;
@@ -1179,6 +1182,14 @@ void PM_CheckDuck (void)
 {
 	trace_t	trace;
 
+	vec3_t fforward;
+	fforward[0] = pml.forward[0];
+	fforward[1] = pml.forward[1];
+	fforward[2] = 0;
+	VectorNormalize(fforward);
+	float xyspeed = sqrt(pml.velocity[0] * pml.velocity[0] + pml.velocity[1] * pml.velocity[1]);
+	//Com_Printf("speed %f \n", xyspeed);
+
 	pm->mins[0] = -16;
 	pm->mins[1] = -16;
 
@@ -1200,19 +1211,41 @@ void PM_CheckDuck (void)
 		pm->s.pm_flags |= PMF_DUCKED;
 	}
 	else if (pm->cmd.upmove < 0 )
-	{	// duck
-		pm->s.pm_flags |= PMF_DUCKED;
+	{	
+		//slide when fast
+		if (xyspeed > 200 && pm->s.pm_flags & PMF_ON_GROUND) {
+			//startslide
+			if (!sliding) {
+				sliding = true;
+				VectorMA(pml.velocity, 0.2, pml.velocity, slidedir);
+				_VectorCopy(slidedir, pml.velocity);
+				Com_Printf("slidin at %f \n", xyspeed);
+			}
+			else {
+				_VectorCopy(slidedir, pml.velocity);
+			}
+
+			
+		}
+		// duck
+		else {
+			pm->s.pm_flags |= PMF_DUCKED;
+		}
+			
 	}
 	else
 	{	// stand up if possible
-		if (pm->s.pm_flags & PMF_DUCKED)
+		if (pm->s.pm_flags & PMF_DUCKED && pm->s.pm_flags & PMF_ON_GROUND)
 		{
 			// try to stand up
 			pm->maxs[2] = 32;
 			trace = pm->trace (pml.origin, pm->mins, pm->maxs, pml.origin);
-			if (!trace.allsolid)
+			if (!trace.allsolid) {
 				pm->s.pm_flags &= ~PMF_DUCKED;
+				
+			}
 		}
+		sliding = false;
 	}
 
 	if (pm->s.pm_flags & PMF_DUCKED)
