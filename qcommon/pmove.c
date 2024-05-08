@@ -71,8 +71,12 @@ int startedfirstwallrun = 0;
 float lastgroundheight = 0.0;
 vec3_t exitvec;
 qboolean grounded = false;
+
 vec3_t slidedir;
 qboolean sliding = false;
+qboolean stoodup = true;
+int slidereset = 20;
+
 
 //parkour params
 int tacmax = 2;
@@ -1215,19 +1219,21 @@ void PM_CheckDuck (void)
 		//slide when fast
 		if (xyspeed > 200 && pm->s.pm_flags & PMF_ON_GROUND) {
 			//startslide
-			if (!sliding) {
+			if (!sliding && slidereset > 100) {
 				pm->s.pm_flags &= ~PMF_DUCKED;
 				sliding = true;
 				VectorScale(pml.velocity, 1.7, slidedir);
 				_VectorCopy(slidedir, pml.velocity);
 				Com_Printf("slidin at %f \n", xyspeed);
+				slidereset = 0;
 			
 			}
 			else {
 				pm->s.pm_flags &= ~PMF_DUCKED;
 				VectorScale(slidedir, 0.995, slidedir);
 				_VectorCopy(slidedir, pml.velocity);
-				Com_Printf("slidin at %f \n", xyspeed);
+				slidereset = 0;
+			//	Com_Printf("slidin at %f \n", xyspeed);
 
 			}
 
@@ -1237,6 +1243,7 @@ void PM_CheckDuck (void)
 		else {
 			sliding = false;
 			pm->s.pm_flags |= PMF_DUCKED;
+			slidereset++;
 		}
 			
 	}
@@ -1252,18 +1259,23 @@ void PM_CheckDuck (void)
 				
 			}
 		}
+
 		sliding = false;
+		slidereset++;
 	}
 
-	if ((pm->s.pm_flags & PMF_DUCKED) || sliding)
+	if ((pm->s.pm_flags & PMF_DUCKED) || sliding || slidereset == 0)
 	{
+		
 		pm->maxs[2] = 4;
 		pm->viewheight = -2;
 	}
 	else
 	{
+		
 		pm->maxs[2] = 32;
 		pm->viewheight = 22;
+		slidereset++;
 	}
 }
 
