@@ -795,6 +795,8 @@ void PM_CheckJump(void)
 	vec3_t	flatleft;
 	vec3_t	flatright;
 	vec3_t	sticktowall;
+	vec3_t viewcheck;
+	float roughdis = 0;
 	//vec3_t	flatback;
 	trace_t trace;
 	trace_t	traceR;
@@ -813,8 +815,9 @@ void PM_CheckJump(void)
 		flatright[i] = pml.right[i];
 		flatleft[i] = -pml.right[i];
 		ledgetracestart[i] = pml.origin[i];
-		ledgemins[i] = pm->mins[i];
-		ledgemaxs[i] = pm->maxs[i];
+		ledgemins[i] = 0;
+		ledgemaxs[i] = 1;
+		
 	}
 
 	flatforward[2] = 0;
@@ -833,17 +836,17 @@ void PM_CheckJump(void)
 
 		VectorMA(ledgetracestart, 14, flatforward, spot);
 		spot[2] += ledgedetectionheight;
-		trace = pm->trace(ledgetracestart, ledgemins, ledgemaxs, spot);
+		trace = pm->trace(ledgetracestart, pm->mins, pm->maxs, spot);
 		if ((trace.fraction == 1.0))
 		{
 			ledge = 1;
 		}
 	}
 
-	VectorMA(pml.origin, 3, flatright, spot2);
-	traceR = pm->trace(pml.origin, pm->mins, pm->maxs, spot2);
-	VectorMA(pml.origin, 3, flatleft, spot2);
-	traceL = pm->trace(pml.origin, pm->mins, pm->maxs, spot2);
+	VectorMA(pml.origin, 20, flatright, spot2);
+	traceR = pm->trace(pml.origin, ledgemins, ledgemaxs, spot2);
+	VectorMA(pml.origin, 20, flatleft, spot2);
+	traceL = pm->trace(pml.origin, ledgemins, ledgemaxs, spot2);
 	if ((traceR.fraction < 1) && (traceR.contents & CONTENTS_SOLID))
 	{
 		wall = 1;
@@ -853,6 +856,7 @@ void PM_CheckJump(void)
 	}
 
 	//peeled off wall
+	//change to if wall == 0?
 	if ((traceR.fraction == 1.0) && traceL.fraction == 1.0) {
 		cacheWallJump = 0;
 		if (leftwallrun > 40)
@@ -864,7 +868,7 @@ void PM_CheckJump(void)
 
 	//print object to be interacted with
 	if (ledge == 1)
-		Com_Printf("Ledge found \n");
+		Com_Printf("Ledge \n");
 	else if (wall == 1)
 		Com_Printf("Right Wall \n");
 	else if (wall == -1)
@@ -908,7 +912,7 @@ void PM_CheckJump(void)
 		else if (wall == -1 && leftwallrun< wallrunlimit) {
 
 			_VectorSubtract(traceL.endpos, pml.origin, sticktowall);
-			VectorMA(pml.velocity, 10, sticktowall, pml.velocity);
+			//VectorMA(pml.velocity, 1, sticktowall, pml.velocity);
 			cacheWallJump = -1;
 			pml.velocity[2] = 0;
 			leftwallrun++;
@@ -917,7 +921,7 @@ void PM_CheckJump(void)
 		else if (wall == 1 && rightwallrun < wallrunlimit) {
 
 			_VectorSubtract(traceR.endpos, pml.origin, sticktowall);
-			VectorMA(pml.velocity, 10, sticktowall, pml.velocity);
+			//VectorMA(pml.velocity, 1, sticktowall, pml.velocity);
 			cacheWallJump = 1;
 			pml.velocity[2] = 0;
 			rightwallrun++;
