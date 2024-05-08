@@ -9,7 +9,7 @@ INSTALL INSTRUCTIONS:
 CONTROLS:
 - Hold SPACE in air to climb up a ledge  when facing one.
 - Hold SPACE in air  to wallrun while roughly perpendicular to a wall
-- Release SPACE while in air to wall jump. 
+- Release SPACE while on wall to wall jump. 
 - To dismount from wallrun without jumping, move away from the wall or look away.
 
 HINTS:
