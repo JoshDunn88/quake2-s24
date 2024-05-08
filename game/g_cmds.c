@@ -899,7 +899,7 @@ void Cmd_PlayerList_f(edict_t *ent)
 	gi.cprintf(ent, PRINT_HIGH, "%s", text);
 }
 
-void Cmd_UpgradeBlaster(edict_t* ent)
+void Cmd_UpgradeBlaster(edict_t *ent)
 {
 	int cost = 200;
 	if (!ent)
@@ -917,6 +917,22 @@ void Cmd_UpgradeBlaster(edict_t* ent)
 		ent->client->pers.score -= cost;
 		gi.cprintf(ent, PRINT_HIGH, "blaster upgraded to level %i, you have %i points remaining \n", ent->client->pers.blasterup, ent->client->pers.score);
 	}
+}
+
+void Cmd_ShowControls(edict_t *ent)
+{
+	gi.cprintf(ent, PRINT_HIGH, " CONTROLS:\n"
+		"Hold SPACE in air to climb up a ledge when facing one.\n"
+		"Hold SPACE in air  to wallrun while looking roughly perpendicular to a wall\n"
+		"Release SPACE while on wall to wall jump.\n"
+		"To dismount from wallrun without jumping, move away from the wall or look away.\n"
+		"Hold C while moving at high speed to slide\n"
+		"Tap C in air shortly before landing to roll and negate fall damage\n"
+		"\n"
+		"HINTS:\n"
+		"You can release space the second  you start a wallrun, or just tap jump next to a wall, to do a quick tic tac.\n"
+		"Walljump direction is slightly influenced by look direction.\n"
+		"You can chain left and right wallruns once each before touching the ground.\n");
 }
 
 
@@ -1010,6 +1026,8 @@ void ClientCommand (edict_t *ent)
 
 	else if (Q_stricmp(cmd, "blasterup") == 0)
 		Cmd_UpgradeBlaster(ent);
+	else if (Q_stricmp(cmd, "pkcontrols") == 0)
+		Cmd_ShowControls(ent);
 	else	// anything that doesn't match a command will be a chat
 		Cmd_Say_f (ent, false, true);
 }

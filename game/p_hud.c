@@ -310,8 +310,8 @@ void HelpComputer (edict_t *ent)
 	int		bestScore = 0;
 	int		skillPoints = ent->client->pers.score;
 	qboolean modhelp = true;
-	Com_sprintf(modmessage1, sizeof(modmessage1), "Kill all enemies as \nfast as possible.");
-	Com_sprintf(modmessage2, sizeof(modmessage2), "Bonus points are awarded \nfor stylish kills.");
+	Com_sprintf(modmessage1, sizeof(modmessage1), "Kill all enemies as \nfast as possible. Stylish \nkills give bonus points");
+	Com_sprintf(modmessage2, sizeof(modmessage2), "Use command pkcontrols for \nmovement controls. Use \nblasterup to upgrade.");
 
 	if (skill->value == 0)
 		sk = "easy";
