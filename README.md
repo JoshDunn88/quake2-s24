@@ -3,7 +3,7 @@ INSTALL INSTRUCTIONS:
 - Download quakenbake folder.
 - Move this folder into your Quake II main folder (where you'll find the quake2.exe and baseq2 folders).
 - Replace quake2.exe in the main Quake II folder with the one in quakenbake, I reccomend keeping the original somewhere in case you want to revert.
-- Move the shortcut in quakenbake out to your Desktop, or wherever else you'd like it.
+- Create a new shortcut and append "+set game quakenbake" (not including quotes) to the Target in Properties.
 - Start the game through the shortcut to access the mod.
 
 CONTROLS:
