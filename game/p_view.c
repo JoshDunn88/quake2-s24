@@ -1039,7 +1039,7 @@ void ClientEndServerFrame (edict_t *ent)
 		if (!safetyroll) {
 			safetyroll = true;
 			safetyrollstart = level.time;
-			gi.cprintf(ent, PRINT_MEDIUM, "rollin \n");
+			//gi.cprintf(ent, PRINT_MEDIUM, "rollin \n");
 		}
 	}
 

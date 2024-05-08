@@ -29,6 +29,7 @@ INTERMISSION
 ======================================================================
 */
 
+
 void MoveClientToIntermission (edict_t *ent)
 {
 	if (deathmatch->value || coop->value)
@@ -217,7 +218,7 @@ void DeathmatchScoreboardMessage (edict_t *ent, edict_t *killer)
 		x = (i>=6) ? 160 : 0;
 		y = 32 + 32 * (i%6);
 
-		// add a dogtag
+		// add a dogtag yeah
 		if (cl_ent == ent)
 			tag = "tag1";
 		else if (cl_ent == killer)
@@ -303,6 +304,14 @@ void HelpComputer (edict_t *ent)
 {
 	char	string[1024];
 	char	*sk;
+	char	modmessage1[512];
+	char	modmessage2[512];
+	int		currentScore = ent->client->resp.score;
+	int		bestScore = 0;
+	int		skillPoints = ent->client->pers.score;
+	qboolean modhelp = true;
+	Com_sprintf(modmessage1, sizeof(modmessage1), "Kill all enemies as \nfast as possible.");
+	Com_sprintf(modmessage2, sizeof(modmessage2), "Bonus points are awarded \nfor stylish kills.");
 
 	if (skill->value == 0)
 		sk = "easy";
@@ -313,22 +322,41 @@ void HelpComputer (edict_t *ent)
 	else
 		sk = "hard+";
 
+	if (modhelp) {
+		Com_sprintf(string, sizeof(string),
+			"xv 32 yv 8 picn help "			// background
+			"xv 202 yv 12 string2 \"%i\" "		// skill points
+			"xv 0 yv 24 cstring2 \"%s\" "		// level name
+			"xv 0 yv 54 cstring2 \"%s\" "		// instructions
+			"xv 0 yv 110 cstring2 \"%s\" "		// instructions2
+			"xv 50 yv 164 string2 \" kills     current   best\" "
+			"xv 50 yv 172 string2 \"%3i/%i        %i         %i\" ",
+			skillPoints,
+			level.level_name,
+			modmessage1,
+			modmessage2,
+			level.killed_monsters, level.total_monsters,
+			currentScore,
+			bestScore);
+	}
 	// send the layout
-	Com_sprintf (string, sizeof(string),
-		"xv 32 yv 8 picn help "			// background
-		"xv 202 yv 12 string2 \"%s\" "		// skill
-		"xv 0 yv 24 cstring2 \"%s\" "		// level name
-		"xv 0 yv 54 cstring2 \"%s\" "		// help 1
-		"xv 0 yv 110 cstring2 \"%s\" "		// help 2
-		"xv 50 yv 164 string2 \" kills     goals    secrets\" "
-		"xv 50 yv 172 string2 \"%3i/%3i     %i/%i       %i/%i\" ", 
-		sk,
-		level.level_name,
-		game.helpmessage1,
-		game.helpmessage2,
-		level.killed_monsters, level.total_monsters, 
-		level.found_goals, level.total_goals,
-		level.found_secrets, level.total_secrets);
+	else {
+		Com_sprintf(string, sizeof(string),
+			"xv 32 yv 8 picn help "			// background
+			"xv 202 yv 12 string2 \"%s\" "		// skill
+			"xv 0 yv 24 cstring2 \"%s\" "		// level name
+			"xv 0 yv 54 cstring2 \"%s\" "		// help 1
+			"xv 0 yv 110 cstring2 \"%s\" "		// help 2
+			"xv 50 yv 164 string2 \" kills     goals    secrets\" "
+			"xv 50 yv 172 string2 \"%3i/%3i     %i/%i       %i/%i\" ",
+			sk,
+			level.level_name,
+			game.helpmessage1,
+			game.helpmessage2,
+			level.killed_monsters, level.total_monsters,
+			level.found_goals, level.total_goals,
+			level.found_secrets, level.total_secrets);
+	}
 
 	gi.WriteByte (svc_layout);
 	gi.WriteString (string);
