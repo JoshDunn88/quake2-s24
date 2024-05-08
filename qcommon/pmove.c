@@ -978,7 +978,16 @@ void PM_CheckJump(void)
 
 	}
 	
-
+	//on ground
+	if (pm->groundentity != NULL) {
+		lefttac = 0;
+		righttac = 0;
+		cacheWallJump = 0;
+		leftwallrun = 0;
+		rightwallrun = 0;
+		lastgroundheight = pml.origin[2];
+		startedfirstwallrun = 0;
+	}
 
 	// must wait for jump to be released
 	if (pm->s.pm_flags & PMF_JUMP_HELD)
@@ -1005,16 +1014,6 @@ void PM_CheckJump(void)
 
 	pm->s.pm_flags |= PMF_JUMP_HELD;
 
-	//on ground
-	if (pm->groundentity != NULL) {
-		lefttac = 0;
-		righttac = 0;
-		cacheWallJump = 0;
-		leftwallrun = 0;
-		rightwallrun = 0;
-		lastgroundheight = pml.origin[2];
-		startedfirstwallrun = 0;
-	}
 
 	// not on ground
 	if (pm->groundentity == NULL) {
@@ -1232,7 +1231,7 @@ void PM_CheckDuck (void)
 			}
 			else {
 				pm->s.pm_flags &= ~PMF_DUCKED;
-				VectorScale(slidedir, 0.995, slidedir);
+				VectorScale(slidedir, 0.997, slidedir);
 				_VectorCopy(slidedir, pml.velocity);
 				slidereset = 0;
 			//	Com_Printf("slidin at %f \n", xyspeed);
