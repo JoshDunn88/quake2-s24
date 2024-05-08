@@ -60,6 +60,34 @@ float	pm_friction = 6;
 float	pm_waterfriction = 1;
 float	pm_waterspeed = 400;
 
+
+//parkour vars
+int lefttac = 0;
+int righttac = 0;
+int leftwallrun = 0;
+int rightwallrun = 0;
+int cacheWallJump = 0;
+int startedfirstwallrun = 0;
+float lastgroundheight = 0.0;
+vec3_t exitvec;
+qboolean grounded = false;
+
+vec3_t slidedir;
+qboolean sliding = false;
+qboolean stoodup = true;
+
+//delay to make sure slide state is exited properly
+int slidereset = 20;
+
+
+//parkour params
+int tacmax = 2;
+int walljumppower = 300;
+int jumppower = 300;
+int ledgedetectionheight = 54;
+int wallrunlimit = 340;
+
+
 /*
 
   walking up a step should kill some velocity
@@ -775,17 +803,190 @@ void PM_CatagorizePosition (void)
 PM_CheckJump
 =============
 */
-void PM_CheckJump (void)
+void PM_CheckJump(void)
 {
+	vec3_t	spot;
+	vec3_t	spot2;
+	vec3_t ledgetracestart;
+	vec3_t ledgemins;
+	vec3_t ledgemaxs;
+	vec3_t climbmins;
+	vec3_t climbmaxs;
+	int		cont;
+	vec3_t	flatforward;
+	vec3_t	flatleft;
+	vec3_t	flatright;
+	vec3_t	sticktowall;
+	vec3_t viewcheck;
+	float roughdis = 0;
+	//vec3_t	flatback;
+	trace_t trace;
+	trace_t	traceR;
+	trace_t	traceL;
+	int wall;
+	int ledge;
+	
+	
+
+	wall = 0;
+	ledge = 0;
+
+	for (int i = 0; i < 3; i++) {
+		flatforward[i] = pml.forward[i];
+		flatright[i] = pml.right[i];
+		flatleft[i] = -pml.right[i];
+		ledgetracestart[i] = pml.origin[i];
+		ledgemins[i] = 0;
+		ledgemaxs[i] = 1;
+		climbmins[i] = pm->mins[i];
+		climbmaxs[i] = pm->maxs[i];
+		//Com_Printf("min: %f, max %f \n", climbmins[2], climbmaxs[2]);
+		
+	}
+
+	flatforward[2] = 0;
+	flatleft[2] = 0;
+	flatright[2] = 0;
+	ledgemaxs[2] = 10;
+	climbmins[2] /= 4;
+	climbmaxs[2] /= 4;
+	//Com_Printf("min: %f, max %f \n", climbmins[2], climbmaxs[2]);
+	ledgetracestart[2] += ledgedetectionheight;
+
+
+
+	VectorNormalize(flatforward);
+
+	VectorMA(pml.origin, 12, flatforward, spot);
+	trace = pm->trace(pml.origin, pm->mins, pm->maxs, spot);
+	if ((trace.fraction < 1) && (trace.contents & CONTENTS_SOLID))
+	{
+
+		VectorMA(ledgetracestart, 14, flatforward, spot);
+		spot[2] += ledgedetectionheight;
+		trace = pm->trace(ledgetracestart, climbmins, climbmaxs, spot);
+		if ((trace.fraction == 1.0))
+		{
+			ledge = 1;
+		}
+	}
+
+	VectorMA(pml.origin, 28, flatright, spot2);
+	traceR = pm->trace(pml.origin, ledgemins, ledgemaxs, spot2);
+	VectorMA(pml.origin, 28, flatleft, spot2);
+	traceL = pm->trace(pml.origin, ledgemins, ledgemaxs, spot2);
+	if ((traceR.fraction < 1) && (traceR.contents & CONTENTS_SOLID))
+	{
+		wall = 1;
+	}
+	if ((traceL.fraction < traceR.fraction) && (traceL.contents & CONTENTS_SOLID)) {
+		wall = -1;
+	}
+
+	//peeled off wall
+	//change to if wall == 0?
+	if (traceR.fraction == 1.0 && traceL.fraction == 1.0) {
+		if (lefttac >= tacmax || righttac >= tacmax) {
+			cacheWallJump = 0;
+			lefttac = 0;
+			righttac = 0;
+		}
+			
+		if (leftwallrun > 40)
+			leftwallrun += wallrunlimit;
+		if (rightwallrun > 40)
+			rightwallrun += wallrunlimit;
+	}
+
+
+	/*print object to be interacted with DEBUG
+	if (ledge == 1)
+		Com_Printf("Ledge \n");
+	else if (wall == 1)
+		Com_Printf("Right Wall \n");
+	else if (wall == -1)
+		Com_Printf("Left wall \n");
+		*/
+
 	if (pm->s.pm_flags & PMF_TIME_LAND)
 	{	// hasn't been long enough since landing to jump again
 		return;
 	}
 
-	if (pm->cmd.upmove < 10)
-	{	// not holding jump
+	// not holding jump
+	if (pm->cmd.upmove < 10)	
+	{
 		pm->s.pm_flags &= ~PMF_JUMP_HELD;
+		
+		
+		if (cacheWallJump == -1 && lefttac < 2) {
+			leftwallrun += wallrunlimit;
+			
+			VectorMA(pml.velocity, 70, flatforward, pml.velocity);
+			VectorMA(pml.velocity, 70, flatright, pml.velocity);
+			pml.velocity[2] = +walljumppower;
+			if (pml.velocity[2] < walljumppower)
+				pml.velocity[2] = walljumppower;
+
+			lefttac += 1;
+		}
+		else if (cacheWallJump == 1 && righttac<2) {
+			
+			rightwallrun += wallrunlimit;
+			VectorMA(pml.velocity, 70, flatforward, pml.velocity);
+			VectorMA(pml.velocity, 70, flatleft, pml.velocity);
+			pml.velocity[2] += walljumppower;
+			if (pml.velocity[2] < walljumppower)
+				pml.velocity[2] = walljumppower;
+			righttac += 1;
+		}
+		
 		return;
+	}
+
+	//hold jump actions
+	if (pm->groundentity == NULL)
+	{ 
+		if (ledge == 1){
+			cacheWallJump = 0;
+			_VectorSubtract(spot, pml.origin, pml.velocity);
+			pml.velocity[0] *= 4;
+			pml.velocity[1] *= 4;
+			pml.velocity[2] = 240;
+		}
+
+		else if (wall == -1 && leftwallrun< wallrunlimit && (pml.origin[2] - lastgroundheight>25 || startedfirstwallrun == 1)) {
+
+			startedfirstwallrun = 1;
+			//optional wall attraction
+			//_VectorSubtract(traceL.endpos, pml.origin, sticktowall);
+			//VectorMA(pml.velocity, 1, sticktowall, pml.velocity);
+			cacheWallJump = -1;
+			pml.velocity[2] = 0;
+			leftwallrun++;
+		}
+
+		else if (wall == 1 && rightwallrun < wallrunlimit && (pml.origin[2] - lastgroundheight > 25 || startedfirstwallrun == 1)) {
+
+			startedfirstwallrun = 1;
+			//_VectorSubtract(traceR.endpos, pml.origin, sticktowall);
+			//VectorMA(pml.velocity, 1, sticktowall, pml.velocity);
+			cacheWallJump = 1;
+			pml.velocity[2] = 0;
+			rightwallrun++;
+		}
+
+	}
+	
+	//on ground
+	if (pm->groundentity != NULL) {
+		lefttac = 0;
+		righttac = 0;
+		cacheWallJump = 0;
+		leftwallrun = 0;
+		rightwallrun = 0;
+		lastgroundheight = pml.origin[2];
+		startedfirstwallrun = 0;
 	}
 
 	// must wait for jump to be released
@@ -811,15 +1012,24 @@ void PM_CheckJump (void)
 		return;
 	}
 
-	if (pm->groundentity == NULL)
-		return;		// in air, so no effect
-
 	pm->s.pm_flags |= PMF_JUMP_HELD;
 
+
+	// not on ground
+	if (pm->groundentity == NULL) {
+		return;
+	}
+	
+	//normal jump
+	else {
+		pml.velocity[2] += jumppower;
+		if (pml.velocity[2] < jumppower)
+			pml.velocity[2] = jumppower;
+	}
 	pm->groundentity = NULL;
-	pml.velocity[2] += 270;
-	if (pml.velocity[2] < 270)
-		pml.velocity[2] = 270;
+	wall = 0;
+	ledge = 0;
+
 }
 
 
@@ -977,6 +1187,14 @@ void PM_CheckDuck (void)
 {
 	trace_t	trace;
 
+	vec3_t fforward;
+	fforward[0] = pml.forward[0];
+	fforward[1] = pml.forward[1];
+	fforward[2] = 0;
+	VectorNormalize(fforward);
+	float xyspeed = sqrt(pml.velocity[0] * pml.velocity[0] + pml.velocity[1] * pml.velocity[1]);
+	//Com_Printf("speed %f \n", xyspeed);
+
 	pm->mins[0] = -16;
 	pm->mins[1] = -16;
 
@@ -997,31 +1215,65 @@ void PM_CheckDuck (void)
 	{
 		pm->s.pm_flags |= PMF_DUCKED;
 	}
-	else if (pm->cmd.upmove < 0 && (pm->s.pm_flags & PMF_ON_GROUND) )
-	{	// duck
-		pm->s.pm_flags |= PMF_DUCKED;
+	else if (pm->cmd.upmove < 0 )
+	{	
+		//slide when fast
+		if (xyspeed > 200 && pm->s.pm_flags & PMF_ON_GROUND) {
+			//startslide
+			if (!sliding && slidereset > 100) {
+				pm->s.pm_flags &= ~PMF_DUCKED;
+				sliding = true;
+				VectorScale(pml.velocity, 1.7, slidedir);
+				_VectorCopy(slidedir, pml.velocity);
+				//Com_Printf("slidin at %f \n", xyspeed);
+				slidereset = 0;
+			
+			}
+			else {
+				pm->s.pm_flags &= ~PMF_DUCKED;
+				VectorScale(slidedir, 0.997, slidedir);
+				_VectorCopy(slidedir, pml.velocity);
+				slidereset = 0;
+			//	Com_Printf("slidin at %f \n", xyspeed);
+
+			}
+
+			
+		}
+		// duck
+		else {
+			sliding = false;
+			pm->s.pm_flags |= PMF_DUCKED;
+			slidereset++;
+		}		
 	}
 	else
 	{	// stand up if possible
-		if (pm->s.pm_flags & PMF_DUCKED)
+		if (pm->s.pm_flags & PMF_DUCKED && pm->s.pm_flags & PMF_ON_GROUND)
 		{
 			// try to stand up
 			pm->maxs[2] = 32;
 			trace = pm->trace (pml.origin, pm->mins, pm->maxs, pml.origin);
-			if (!trace.allsolid)
+			if (!trace.allsolid) {
 				pm->s.pm_flags &= ~PMF_DUCKED;
+				
+			}
 		}
+
+		sliding = false;
+		slidereset++;
 	}
 
-	if (pm->s.pm_flags & PMF_DUCKED)
-	{
+	if ((pm->s.pm_flags & PMF_DUCKED) || sliding || slidereset == 0)
+	{	
 		pm->maxs[2] = 4;
 		pm->viewheight = -2;
 	}
 	else
-	{
+	{	
 		pm->maxs[2] = 32;
 		pm->viewheight = 22;
+		slidereset++;
 	}
 }
 

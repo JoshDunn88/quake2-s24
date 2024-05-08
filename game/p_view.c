@@ -32,6 +32,8 @@ float	xyspeed;
 float	bobmove;
 int		bobcycle;		// odd cycles are right foot going forward
 float	bobfracsin;		// sin(bobfrac*M_PI)
+float	safetyrollstart = 0;
+qboolean	safetyroll = false;
 
 /*
 ===============
@@ -558,9 +560,11 @@ void P_FallingDamage (edict_t *ent)
 		if (damage < 1)
 			damage = 1;
 		VectorSet (dir, 0, 0, 1);
-
-		if (!deathmatch->value || !((int)dmflags->value & DF_NO_FALLING) )
-			T_Damage (ent, world, world, dir, ent->s.origin, vec3_origin, damage, 0, 0, MOD_FALLING);
+		
+		//fall damage normal + safetyroll - josh
+		if (!deathmatch->value || !((int)dmflags->value & DF_NO_FALLING))
+			if (!safetyroll)
+				T_Damage (ent, world, world, dir, ent->s.origin, vec3_origin, damage, 0, 0, MOD_FALLING);
 	}
 	else
 	{
@@ -1030,8 +1034,21 @@ void ClientEndServerFrame (edict_t *ent)
 	
 	bobtime = (current_client->bobtime += bobmove);
 
-	if (current_client->ps.pmove.pm_flags & PMF_DUCKED)
+	if (current_client->ps.pmove.pm_flags & PMF_DUCKED){
 		bobtime *= 4;
+		if (!safetyroll) {
+			safetyroll = true;
+			safetyrollstart = level.time;
+			//gi.cprintf(ent, PRINT_MEDIUM, "rollin \n");
+		}
+	}
+
+	//I want this on crouch but hmmm
+	if (safetyroll && level.time - safetyrollstart > 0.5) {
+		safetyrollstart = 0;
+		safetyroll = false;
+	}
+		
 
 	bobcycle = (int)bobtime;
 	bobfracsin = fabs(sin(bobtime*M_PI));

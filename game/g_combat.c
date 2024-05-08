@@ -91,6 +91,8 @@ Killed
 */
 void Killed (edict_t *targ, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
 {
+	int scaledScore = 0;
+	float xyspeed = sqrt(attacker->velocity[0] * attacker->velocity[0] + attacker->velocity[1] * attacker->velocity[1]);
 	if (targ->health < -999)
 		targ->health = -999;
 
@@ -102,8 +104,30 @@ void Killed (edict_t *targ, edict_t *inflictor, edict_t *attacker, int damage, v
 		if (!(targ->monsterinfo.aiflags & AI_GOOD_GUY))
 		{
 			level.killed_monsters++;
-			if (coop->value && attacker->client)
-				attacker->client->resp.score++;
+			scaledScore = 100;
+
+			if (!deathmatch->value && !coop->value && attacker->client) {
+				if (targ->s.origin[2] + 30 < attacker->s.origin[2]) {
+					scaledScore *= 2;
+					gi.cprintf(attacker, PRINT_HIGH, "death from above + ");
+				}
+				if (xyspeed>300) {
+					scaledScore *= 2;
+					gi.cprintf(attacker, PRINT_HIGH, "high speed + ");
+				}
+				//other checks
+
+				gi.cprintf(attacker, PRINT_HIGH, "%i \n", scaledScore);
+				attacker->client->resp.score += scaledScore;
+
+				if (level.killed_monsters == level.total_monsters) {
+					attacker->client->pers.score = attacker->client->resp.score;
+				}
+			}
+
+			if (coop->value && attacker->client) {
+				attacker->client->resp.score ++;
+			}
 			// medics won't heal monsters that they kill themselves
 			if (strcmp(attacker->classname, "monster_medic") == 0)
 				targ->owner = attacker;

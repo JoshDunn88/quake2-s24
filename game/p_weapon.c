@@ -563,6 +563,7 @@ void weapon_grenade_fire (edict_t *ent, qboolean held)
 
 	timer = ent->client->grenade_time - level.time;
 	speed = GRENADE_MINSPEED + (GRENADE_TIMER - timer) * ((GRENADE_MAXSPEED - GRENADE_MINSPEED) / GRENADE_TIMER);
+	
 	fire_grenade2 (ent, start, forward, damage, speed, timer, radius, held);
 
 	if (! ( (int)dmflags->value & DF_INFINITE_AMMO ) )
@@ -847,12 +848,17 @@ void Blaster_Fire (edict_t *ent, vec3_t g_offset, int damage, qboolean hyper, in
 void Weapon_Blaster_Fire (edict_t *ent)
 {
 	int		damage;
-
+	
 	if (deathmatch->value)
 		damage = 15;
 	else
 		damage = 10;
-	Blaster_Fire (ent, vec3_origin, damage, false, EF_BLASTER);
+
+	if (ent->client->pers.blasterup)
+		damage *= ent->client->pers.blasterup;
+
+	//gi.cprintf(ent, PRINT_HIGH, "damage = %i", damage);
+	Blaster_Fire (ent, vec3_origin, damage , false, EF_BLASTER);
 	ent->client->ps.gunframe++;
 }
 

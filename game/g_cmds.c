@@ -319,7 +319,7 @@ void Cmd_God_f (edict_t *ent)
 	if (!(ent->flags & FL_GODMODE) )
 		msg = "godmode OFF\n";
 	else
-		msg = "godmode ON\n";
+		msg = "balls godmode ON\n";
 
 	gi.cprintf (ent, PRINT_HIGH, msg);
 }
@@ -899,6 +899,42 @@ void Cmd_PlayerList_f(edict_t *ent)
 	gi.cprintf(ent, PRINT_HIGH, "%s", text);
 }
 
+void Cmd_UpgradeBlaster(edict_t *ent)
+{
+	int cost = 200;
+	if (!ent)
+		return;
+	int difference = cost - ent->client->pers.score;
+
+	if (difference > 0) {
+		gi.cprintf(ent, PRINT_HIGH, "you need %i more skill points \n", difference);
+	}
+	else {
+		if (!ent->client->pers.blasterup)
+			ent->client->pers.blasterup = 2;
+		else
+			ent->client->pers.blasterup++;
+		ent->client->pers.score -= cost;
+		gi.cprintf(ent, PRINT_HIGH, "blaster upgraded to level %i, you have %i points remaining \n", ent->client->pers.blasterup, ent->client->pers.score);
+	}
+}
+
+void Cmd_ShowControls(edict_t *ent)
+{
+	gi.cprintf(ent, PRINT_HIGH, " CONTROLS:\n"
+		"Hold SPACE in air to climb up a ledge when facing one.\n"
+		"Hold SPACE in air  to wallrun while looking roughly perpendicular to a wall\n"
+		"Release SPACE while on wall to wall jump.\n"
+		"To dismount from wallrun without jumping, move away from the wall or look away.\n"
+		"Hold C while moving at high speed to slide\n"
+		"Tap C in air shortly before landing to roll and negate fall damage\n"
+		"\n"
+		"HINTS:\n"
+		"You can release space the second  you start a wallrun, or just tap jump next to a wall, to do a quick tic tac.\n"
+		"Walljump direction is slightly influenced by look direction.\n"
+		"You can chain left and right wallruns once each before touching the ground.\n");
+}
+
 
 /*
 =================
@@ -987,6 +1023,11 @@ void ClientCommand (edict_t *ent)
 		Cmd_Wave_f (ent);
 	else if (Q_stricmp(cmd, "playerlist") == 0)
 		Cmd_PlayerList_f(ent);
+
+	else if (Q_stricmp(cmd, "blasterup") == 0)
+		Cmd_UpgradeBlaster(ent);
+	else if (Q_stricmp(cmd, "pkcontrols") == 0)
+		Cmd_ShowControls(ent);
 	else	// anything that doesn't match a command will be a chat
 		Cmd_Say_f (ent, false, true);
 }
