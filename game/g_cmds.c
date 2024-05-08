@@ -935,6 +935,22 @@ void Cmd_ShowControls(edict_t *ent)
 		"You can chain left and right wallruns once each before touching the ground.\n");
 }
 
+void Cmd_Shop(edict_t* ent)
+{
+	int blevel = 1;
+	if (!ent)
+		return; 
+	if (!ent->client->pers.blasterup)
+		blevel = 1;
+	else
+		blevel = ent->client->pers.blasterup;
+
+	int balance = ent->client->pers.score;
+
+	gi.cprintf(ent, PRINT_HIGH, "\nBALANCE: %i\nBlaster Lvl: %i		enter \"blasterup\" to upgrade for 200 points\n",ent->client->pers.score, ent->client->pers.blasterup);
+
+}
+
 
 /*
 =================
@@ -1028,6 +1044,8 @@ void ClientCommand (edict_t *ent)
 		Cmd_UpgradeBlaster(ent);
 	else if (Q_stricmp(cmd, "pkcontrols") == 0)
 		Cmd_ShowControls(ent);
+	else if (Q_stricmp(cmd, "shop") == 0)
+		Cmd_Shop(ent);
 	else	// anything that doesn't match a command will be a chat
 		Cmd_Say_f (ent, false, true);
 }
