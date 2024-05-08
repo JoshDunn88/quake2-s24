@@ -67,8 +67,17 @@ int righttac = 0;
 int leftwallrun = 0;
 int rightwallrun = 0;
 int cacheWallJump = 0;
-float lastgroundheight = 0.0;
 int startedfirstwallrun = 0;
+float lastgroundheight = 0.0;
+vec3_t exitvec;
+
+//parkour params
+int tacmax = 2;
+int walljumppower = 300;
+int jumppower = 300;
+int ledgedetectionheight = 54;
+int wallrunlimit = 340;
+
 
 /*
 
@@ -808,8 +817,7 @@ void PM_CheckJump(void)
 	int wall;
 	int ledge;
 	
-	int ledgedetectionheight = 50;
-	int wallrunlimit = 340;
+	
 
 	wall = 0;
 	ledge = 0;
@@ -833,7 +841,7 @@ void PM_CheckJump(void)
 	ledgemaxs[2] = 10;
 	climbmins[2] /= 4;
 	climbmaxs[2] /= 4;
-	Com_Printf("min: %f, max %f \n", climbmins[2], climbmaxs[2]);
+	//Com_Printf("min: %f, max %f \n", climbmins[2], climbmaxs[2]);
 	ledgetracestart[2] += ledgedetectionheight;
 
 
@@ -868,8 +876,13 @@ void PM_CheckJump(void)
 
 	//peeled off wall
 	//change to if wall == 0?
-	if ((traceR.fraction == 1.0) && traceL.fraction == 1.0) {
-		cacheWallJump = 0;
+	if (traceR.fraction == 1.0 && traceL.fraction == 1.0) {
+		if (lefttac >= tacmax || righttac >= tacmax) {
+			cacheWallJump = 0;
+			lefttac = 0;
+			righttac = 0;
+		}
+			
 		if (leftwallrun > 40)
 			leftwallrun += wallrunlimit;
 		if (rightwallrun > 40)
@@ -877,13 +890,14 @@ void PM_CheckJump(void)
 	}
 
 
-	//print object to be interacted with
+	/*print object to be interacted with DEBUG
 	if (ledge == 1)
 		Com_Printf("Ledge \n");
 	else if (wall == 1)
 		Com_Printf("Right Wall \n");
 	else if (wall == -1)
 		Com_Printf("Left wall \n");
+		*/
 
 	if (pm->s.pm_flags & PMF_TIME_LAND)
 	{	// hasn't been long enough since landing to jump again
@@ -891,25 +905,37 @@ void PM_CheckJump(void)
 	}
 
 	// not holding jump
-	if (pm->cmd.upmove < 10)
-	{	
+	if (pm->cmd.upmove < 10)	
+	{
 		pm->s.pm_flags &= ~PMF_JUMP_HELD;
-		if (cacheWallJump == -1 && lefttac < 3) {
-			VectorMA(pml.velocity, 60, flatforward, pml.velocity);
+		
+		
+		if (cacheWallJump == -1 && lefttac < 2) {
+			leftwallrun += wallrunlimit;
+			
+			VectorMA(pml.velocity, 70, flatforward, pml.velocity);
 			VectorMA(pml.velocity, 70, flatright, pml.velocity);
-			pml.velocity[2] += 250;
+			pml.velocity[2] = +walljumppower;
+			if (pml.velocity[2] < walljumppower)
+				pml.velocity[2] = walljumppower;
+
 			lefttac += 1;
 		}
-		else if (cacheWallJump == 1 && righttac<3) {
-			VectorMA(pml.velocity, 60, flatforward, pml.velocity);
+		else if (cacheWallJump == 1 && righttac<2) {
+			
+			rightwallrun += wallrunlimit;
+			VectorMA(pml.velocity, 70, flatforward, pml.velocity);
 			VectorMA(pml.velocity, 70, flatleft, pml.velocity);
-			pml.velocity[2] += 250;
+			pml.velocity[2] += walljumppower;
+			if (pml.velocity[2] < walljumppower)
+				pml.velocity[2] = walljumppower;
 			righttac += 1;
 		}
+		
 		return;
 	}
 
-	//hold space actions
+	//hold jump actions
 	if (pm->groundentity == NULL)
 	{ 
 		if (ledge == 1){
@@ -920,20 +946,21 @@ void PM_CheckJump(void)
 			pml.velocity[2] = 240;
 		}
 
-		else if (wall == -1 && leftwallrun< wallrunlimit && (pml.origin[2] - lastgroundheight>20 || startedfirstwallrun == 1)) {
+		else if (wall == -1 && leftwallrun< wallrunlimit && (pml.origin[2] - lastgroundheight>25 || startedfirstwallrun == 1)) {
 
 			startedfirstwallrun = 1;
-			_VectorSubtract(traceL.endpos, pml.origin, sticktowall);
+			//optional wall attraction
+			//_VectorSubtract(traceL.endpos, pml.origin, sticktowall);
 			//VectorMA(pml.velocity, 1, sticktowall, pml.velocity);
 			cacheWallJump = -1;
 			pml.velocity[2] = 0;
 			leftwallrun++;
 		}
 
-		else if (wall == 1 && rightwallrun < wallrunlimit && (pml.origin[2] - lastgroundheight > 20 || startedfirstwallrun == 1)) {
+		else if (wall == 1 && rightwallrun < wallrunlimit && (pml.origin[2] - lastgroundheight > 25 || startedfirstwallrun == 1)) {
 
 			startedfirstwallrun = 1;
-			_VectorSubtract(traceR.endpos, pml.origin, sticktowall);
+			//_VectorSubtract(traceR.endpos, pml.origin, sticktowall);
 			//VectorMA(pml.velocity, 1, sticktowall, pml.velocity);
 			cacheWallJump = 1;
 			pml.velocity[2] = 0;
@@ -969,7 +996,7 @@ void PM_CheckJump(void)
 
 	pm->s.pm_flags |= PMF_JUMP_HELD;
 
-	//reset tic tacs on landing
+	//on ground
 	if (pm->groundentity != NULL) {
 		lefttac = 0;
 		righttac = 0;
@@ -980,27 +1007,16 @@ void PM_CheckJump(void)
 		startedfirstwallrun = 0;
 	}
 
-	// in air
-	if (pm->groundentity == NULL && ledge==0) {
-		
-		if (wall==-1 && lefttac<3) {
-			VectorMA(pml.velocity, 60, flatforward, pml.velocity);
-			VectorMA(pml.velocity, 70, flatright, pml.velocity);
-			pml.velocity[2] += 250;
-			lefttac+= 1;
-		}
-		else if (wall == 1 && righttac <3) {
-			VectorMA(pml.velocity, 60, flatforward, pml.velocity);
-			VectorMA(pml.velocity, 70, flatleft, pml.velocity);
-			pml.velocity[2] += 250;
-			righttac+= 1;
-		}
+	// not on ground
+	if (pm->groundentity == NULL) {
+		return;
 	}
 	
+	//normal jump
 	else {
-		pml.velocity[2] += 300;
-		if (pml.velocity[2] < 300)
-			pml.velocity[2] = 300;
+		pml.velocity[2] += jumppower;
+		if (pml.velocity[2] < jumppower)
+			pml.velocity[2] = jumppower;
 	}
 	pm->groundentity = NULL;
 	wall = 0;
