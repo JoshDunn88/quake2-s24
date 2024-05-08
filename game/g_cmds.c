@@ -899,6 +899,26 @@ void Cmd_PlayerList_f(edict_t *ent)
 	gi.cprintf(ent, PRINT_HIGH, "%s", text);
 }
 
+void Cmd_UpgradeBlaster(edict_t* ent)
+{
+	int cost = 200;
+	if (!ent)
+		return;
+	int difference = cost - ent->client->pers.score;
+
+	if (difference > 0) {
+		gi.cprintf(ent, PRINT_HIGH, "you need %i more skill points \n", difference);
+	}
+	else {
+		if (!ent->client->pers.blasterup)
+			ent->client->pers.blasterup = 2;
+		else
+			ent->client->pers.blasterup++;
+		ent->client->pers.score -= cost;
+		gi.cprintf(ent, PRINT_HIGH, "blaster upgraded to level %i, you have %i points remaining \n", ent->client->pers.blasterup, ent->client->pers.score);
+	}
+}
+
 
 /*
 =================
@@ -987,6 +1007,9 @@ void ClientCommand (edict_t *ent)
 		Cmd_Wave_f (ent);
 	else if (Q_stricmp(cmd, "playerlist") == 0)
 		Cmd_PlayerList_f(ent);
+
+	else if (Q_stricmp(cmd, "blasterup") == 0)
+		Cmd_UpgradeBlaster(ent);
 	else	// anything that doesn't match a command will be a chat
 		Cmd_Say_f (ent, false, true);
 }
