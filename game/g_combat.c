@@ -120,7 +120,7 @@ void Killed (edict_t *targ, edict_t *inflictor, edict_t *attacker, int damage, v
 				gi.cprintf(attacker, PRINT_HIGH, "%i \n", scaledScore);
 				attacker->client->resp.score += scaledScore;
 
-				if (level.killed_monsters == 3) {
+				if (level.killed_monsters == level.total_monsters) {
 					attacker->client->pers.score = attacker->client->resp.score;
 				}
 			}
