@@ -1044,7 +1044,7 @@ void ClientEndServerFrame (edict_t *ent)
 	}
 
 	//I want this on crouch but hmmm
-	if (safetyroll && level.time - safetyrollstart > 1) {
+	if (safetyroll && level.time - safetyrollstart > 0.5) {
 		safetyrollstart = 0;
 		safetyroll = false;
 	}
