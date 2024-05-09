@@ -1035,7 +1035,8 @@ void ClientEndServerFrame (edict_t *ent)
 	bobtime = (current_client->bobtime += bobmove);
 
 	if (current_client->ps.pmove.pm_flags & PMF_DUCKED){
-		bobtime *= 4;
+		if (current_client->ps.pmove.pm_flags & PMF_ON_GROUND)
+			bobtime *= 4;
 		if (!safetyroll) {
 			safetyroll = true;
 			safetyrollstart = level.time;
