@@ -1,3 +1,6 @@
 ﻿  pmove.c
-C:\Users\JoshD\source\repos\quake2-s24\qcommon\pmove.c(781,7): warning C4101: 'cont': unreferenced local variable
+C:\Users\JoshD\source\repos\quake2-s24\qcommon\pmove.c(815,7): warning C4101: 'cont': unreferenced local variable
+C:\Users\JoshD\source\repos\quake2-s24\qcommon\pmove.c(821,8): warning C4189: 'roughdis': local variable is initialized but not referenced
+C:\Users\JoshD\source\repos\quake2-s24\qcommon\pmove.c(820,9): warning C4101: 'viewcheck': unreferenced local variable
+C:\Users\JoshD\source\repos\quake2-s24\qcommon\pmove.c(819,9): warning C4101: 'sticktowall': unreferenced local variable
   quake2.vcxproj -> C:\Users\JoshD\source\repos\quake2-s24\release\quake2.exe
