@@ -1223,7 +1223,7 @@ void PM_CheckDuck (void)
 			if (!sliding && slidereset > 100) {
 				pm->s.pm_flags &= ~PMF_DUCKED;
 				sliding = true;
-				VectorScale(pml.velocity, 1.7, slidedir);
+				VectorScale(pml.velocity, 1.6, slidedir);
 				_VectorCopy(slidedir, pml.velocity);
 				//Com_Printf("slidin at %f \n", xyspeed);
 				slidereset = 0;
@@ -1231,7 +1231,7 @@ void PM_CheckDuck (void)
 			}
 			else {
 				pm->s.pm_flags &= ~PMF_DUCKED;
-				VectorScale(slidedir, 0.997, slidedir);
+				VectorScale(slidedir, 0.996, slidedir);
 				_VectorCopy(slidedir, pml.velocity);
 				slidereset = 0;
 			//	Com_Printf("slidin at %f \n", xyspeed);

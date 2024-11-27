@@ -1,11 +1,5 @@
 ﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(517,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
-  g_combat.c
   p_view.c
-C:\Users\JoshD\source\repos\quake2-s24\game\g_combat.c(395,51): warning C4100: 'attacker': unreferenced formal parameter
-C:\Users\JoshD\source\repos\quake2-s24\game\g_combat.c(395,36): warning C4100: 'targ': unreferenced formal parameter
-C:\Users\JoshD\source\repos\quake2-s24\game\p_view.c(44,27): warning C4100: 'angles': unreferenced formal parameter
-  Generating Code...
-C:\Users\JoshD\source\repos\quake2-s24\game\g_combat.c(274): warning C4701: potentially uninitialized local variable 'index' used
-C:\Users\JoshD\source\repos\quake2-s24\game\g_combat.c(234): warning C4701: potentially uninitialized local variable 'power' used
+C:\Users\JoshD\source\repos\quake2-s24\game\p_view.c(45,27): warning C4100: 'angles': unreferenced formal parameter
      Creating library .\..\release\gamex86.lib and object .\..\release\gamex86.exp
   game.vcxproj -> C:\Users\JoshD\source\repos\quake2-s24\game\release\gamex86.dll

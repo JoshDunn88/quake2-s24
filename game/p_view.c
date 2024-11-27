@@ -33,7 +33,8 @@ float	bobmove;
 int		bobcycle;		// odd cycles are right foot going forward
 float	bobfracsin;		// sin(bobfrac*M_PI)
 float	safetyrollstart = 0;
-qboolean	safetyroll = false;
+qboolean	safetyrolled = false;
+qboolean	safetyrollin = false;
 
 /*
 ===============
@@ -563,7 +564,7 @@ void P_FallingDamage (edict_t *ent)
 		
 		//fall damage normal + safetyroll - josh
 		if (!deathmatch->value || !((int)dmflags->value & DF_NO_FALLING))
-			if (!safetyroll)
+			if (!safetyrollin)
 				T_Damage (ent, world, world, dir, ent->s.origin, vec3_origin, damage, 0, 0, MOD_FALLING);
 	}
 	else
@@ -1034,19 +1035,28 @@ void ClientEndServerFrame (edict_t *ent)
 	
 	bobtime = (current_client->bobtime += bobmove);
 
+	if (safetyrolled && current_client->ps.pmove.pm_flags & PMF_ON_GROUND) {
+		safetyrolled = false;
+	}
+		
+
 	if (current_client->ps.pmove.pm_flags & PMF_DUCKED){
-		bobtime *= 4;
-		if (!safetyroll) {
-			safetyroll = true;
+		if (current_client->ps.pmove.pm_flags & PMF_ON_GROUND)
+			bobtime *= 4;
+		else
+			bobtime *= 0.25;
+
+		if (!safetyrolled) {
+			safetyrolled = true;
+			safetyrollin = true;
 			safetyrollstart = level.time;
-			gi.cprintf(ent, PRINT_MEDIUM, "rollin \n");
 		}
 	}
 
-	//I want this on crouch but hmmm
-	if (safetyroll && level.time - safetyrollstart > 0.5) {
+	//cancel roll after window has passed
+	if (safetyrollin && level.time - safetyrollstart > 0.2) {
 		safetyrollstart = 0;
-		safetyroll = false;
+		safetyrollin = false;
 	}
 		
 
